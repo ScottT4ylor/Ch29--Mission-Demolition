@@ -5,6 +5,7 @@ public class FollowCam : MonoBehaviour {
     static public FollowCam S;
     public int delay = 25;
     public float ease = 0.05f;
+    public float velocityEase = 0.1f;
     public bool wtfIsThis2;
 
 
@@ -12,6 +13,8 @@ public class FollowCam : MonoBehaviour {
     private Vector2 minXY = new Vector2(0, 0);
     public GameObject poi;
     private float camZ;
+    private Vector3 velocityOffset = Vector3.zero;
+    private float groundBias;
 
     void Awake()
     {
@@ -28,9 +31,13 @@ public class FollowCam : MonoBehaviour {
             return;
         }
         delay = 0;
+        velocityOffset.x = Mathf.Lerp(velocityOffset.x, poi.GetComponent<Rigidbody>().velocity.x*0.75f, velocityEase);
+        velocityOffset.y = Mathf.Lerp(velocityOffset.y, poi.GetComponent<Rigidbody>().velocity.y*0.75f, velocityEase);
         lookAhead = poi.transform.position;
-        lookAhead.x += poi.GetComponent<Rigidbody>().velocity.x * 0.75f;
-        lookAhead.y += poi.GetComponent<Rigidbody>().velocity.y * 0.5f;
+        lookAhead += velocityOffset;
+        groundBias = 1 / (1 + Mathf.Exp(-0.1f * (GetComponent<Camera>().orthographicSize - 10)));
+        if (groundBias < 0) groundBias = 0;
+        lookAhead.y = Mathf.Lerp(lookAhead.y, (poi.transform.position.y/3)*2, groundBias);
         Vector3 destination = Vector3.Lerp(transform.position, lookAhead, ease);
         destination.x = Mathf.Max(minXY.x, destination.x);
         destination.y = Mathf.Max(minXY.y, destination.y);
