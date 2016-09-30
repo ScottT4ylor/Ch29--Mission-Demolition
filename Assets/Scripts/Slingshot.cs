@@ -3,6 +3,8 @@ using System.Collections;
 
 public class Slingshot : MonoBehaviour {
 
+	public static Slingshot S;
+
     public GameObject projectilePrefab;
     public float velocityMult = 4f;
     public bool wtfIsThis;
@@ -17,6 +19,7 @@ public class Slingshot : MonoBehaviour {
 
     void Awake()
     {
+		S = this;
         launchPoint = transform.Find("LaunchPoint").gameObject;
         launchPoint.SetActive(false);
         launchPos = launchPoint.transform.position;
@@ -45,6 +48,7 @@ public class Slingshot : MonoBehaviour {
         if (Input.GetMouseButtonUp(0))
         {
             aimingMode = false;
+			FollowCam.S.lockFire ();
             projectile.GetComponent<Rigidbody>().isKinematic = false;
             projectile.GetComponent<Rigidbody>().velocity = -mouseDelta * velocityMult;
             FollowCam.S.poi = projectile;
@@ -56,26 +60,29 @@ public class Slingshot : MonoBehaviour {
 
     void OnMouseEnter()
     {
-        if(aimingMode == false) launchPoint.SetActive(true);
+		if(aimingMode == false && !FollowCam.S.fireLocked()) launchPoint.SetActive(true);
     }
 
     void OnMouseOver()
     {
-        if (aimingMode == false) launchPoint.SetActive(true);
+		if (aimingMode == false && !FollowCam.S.fireLocked()) launchPoint.SetActive(true);
     }
 
     void OnMouseExit()
     {
-        if(aimingMode == false) launchPoint.SetActive(false);
+		if(aimingMode == false && !FollowCam.S.fireLocked()) launchPoint.SetActive(false);
     }
 
     void OnMouseDown()
     {
-        aimingMode = true;
-        projectile = Instantiate(projectilePrefab) as GameObject;
-        projectile.transform.position = launchPos;
-        projectile.GetComponent<Rigidbody>().isKinematic = true;
-        launchPoint.SetActive(false);
+		if (!FollowCam.S.fireLocked ())
+		{
+			aimingMode = true;
+			projectile = Instantiate (projectilePrefab) as GameObject;
+			projectile.transform.position = launchPos;
+			projectile.GetComponent<Rigidbody> ().isKinematic = true;
+			launchPoint.SetActive (false);
+		}
     }
 
 }

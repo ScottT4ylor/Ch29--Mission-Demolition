@@ -15,6 +15,7 @@ public class FollowCam : MonoBehaviour {
     private float camZ;
     private Vector3 velocityOffset = Vector3.zero;
     private float groundBias;
+	private bool returning = false;
 
     void Awake()
     {
@@ -24,30 +25,65 @@ public class FollowCam : MonoBehaviour {
 
     void FixedUpdate()
     {
-        if (poi == null) return;
-        if (delay > 0 && poi.transform.position.x < 0 && poi.transform.position.y < 7)
-        {
-            delay--;
-            return;
-        }
-        delay = 0;
-        velocityOffset.x = Mathf.Lerp(velocityOffset.x, poi.GetComponent<Rigidbody>().velocity.x*0.75f, velocityEase);
-        velocityOffset.y = Mathf.Lerp(velocityOffset.y, poi.GetComponent<Rigidbody>().velocity.y*0.75f, velocityEase);
-        lookAhead = poi.transform.position;
-        lookAhead += velocityOffset;
-        groundBias = 1 / (1 + Mathf.Exp(-0.1f * (GetComponent<Camera>().orthographicSize - 10)));
-        if (groundBias < 0) groundBias = 0;
-        lookAhead.y = Mathf.Lerp(lookAhead.y, (poi.transform.position.y/3)*2, groundBias);
-        Vector3 destination = Vector3.Lerp(transform.position, lookAhead, ease);
-        destination.x = Mathf.Max(minXY.x, destination.x);
-        destination.y = Mathf.Max(minXY.y, destination.y);
+		Vector3 destination;
+		if (poi == null)
+		{
+			destination = Vector3.Lerp (transform.position, Vector3.zero, ease);
+			destination.z = camZ;
+			transform.position = destination;
+			if (returning)
+			{
+				
+				Vector3 tempVec = transform.position;
+				tempVec.z = 0;
+				print ("distance is " + Vector3.Distance (tempVec, Vector3.zero));
+				if (Vector3.Distance(tempVec, Vector3.zero) < 2)
+				{
+					returning = false;
+				}
+			}
+		}
+		else
+		{
+			if ((poi.CompareTag("Projectile")) && (poi.GetComponent<Rigidbody> ().IsSleeping)())
+			{
+				Destroy (poi);
+				poi = null;
+				returnToSlingshot ();
+				return;
+			}
+			if (delay > 0 && poi.transform.position.x < 0 && poi.transform.position.y < 7)
+			{
+				delay--;
+				return;
+			}
+			delay = 0;
+			velocityOffset.x = Mathf.Lerp (velocityOffset.x, poi.GetComponent<Rigidbody> ().velocity.x * 1.25f, velocityEase);
+			velocityOffset.y = Mathf.Lerp (velocityOffset.y, poi.GetComponent<Rigidbody> ().velocity.y * 0.75f, velocityEase);
+			lookAhead = poi.transform.position;
+			lookAhead += velocityOffset;
+			groundBias = 1 / (1 + Mathf.Exp (-0.1f * (GetComponent<Camera> ().orthographicSize - 10)));
+			if (groundBias < 0)	groundBias = 0;
+			lookAhead.y = Mathf.Lerp (lookAhead.y, (poi.transform.position.y / 3) * 2, groundBias);
+			destination = Vector3.Lerp (transform.position, lookAhead, ease);
+			destination.x = Mathf.Max (minXY.x, destination.x);
+			destination.y = Mathf.Max (minXY.y, destination.y);
+		}
         destination.z = camZ;
         GetComponent<Camera>().orthographicSize = destination.y + 10;
         transform.position = destination;
     }
 
-    void returnToSlingshot()
+    public void returnToSlingshot()
     {
-        //because it has to return to the slingshot eventually.
+		returning = true;
     }
+	public bool fireLocked()
+	{
+		return returning;
+	}
+	public void lockFire()
+	{
+		returning = true;
+	}
 }
