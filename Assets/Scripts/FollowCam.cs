@@ -36,7 +36,6 @@ public class FollowCam : MonoBehaviour {
 				
 				Vector3 tempVec = transform.position;
 				tempVec.z = 0;
-				print ("distance is " + Vector3.Distance (tempVec, Vector3.zero));
 				if (Vector3.Distance(tempVec, Vector3.zero) < 2)
 				{
 					returning = false;

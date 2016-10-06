@@ -9,11 +9,12 @@ public class Slingshot : MonoBehaviour {
     public float velocityMult = 4f;
     public bool wtfIsThis;
 
-    private GameObject launchPoint;
+    public GameObject launchPoint;
     private Vector3 launchPos;
     private GameObject projectile;
     private bool aimingMode;
     private float maxMagnitude;
+    private int autoReturn = 0;
 
 
 
@@ -48,13 +49,28 @@ public class Slingshot : MonoBehaviour {
         if (Input.GetMouseButtonUp(0))
         {
             aimingMode = false;
-			FollowCam.S.lockFire ();
+            FollowCam.S.lockFire ();
             projectile.GetComponent<Rigidbody>().isKinematic = false;
             projectile.GetComponent<Rigidbody>().velocity = -mouseDelta * velocityMult;
             FollowCam.S.poi = projectile;
+            autoReturn = 500;
             projectile = null;
         }
 
+    }
+
+
+    void FixedUpdate()
+    {
+        if(FollowCam.S.poi != null)
+        {
+            autoReturn--;
+            if (autoReturn <=0)
+            {
+                Destroy(FollowCam.S.poi);
+                FollowCam.S.poi = null;
+            }
+        }
     }
 	
 
